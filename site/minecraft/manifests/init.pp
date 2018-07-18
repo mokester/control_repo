@@ -1,29 +1,30 @@
-class minecraft {
-  file {'/opt/minecraft':
+ass minecraft (
+  $url = 'https://s3.amazonaws.com/Minecraft.Download/versions/1.12.1/minecraft_server.1.12.1.jar',
+  $install_dir = '/opt/minecraft'
+){
+  file { $install_dir:
     ensure => directory,
   }
-  file {'/opt/minecraft/minecraft_server.jar':
+  file { "${install_dir}/minecraft_server.jar":
     ensure => file,
-    source => 'https://s3.amazonaws.com/Minecraft.Download/versions/1.12.1/minecraft_server.1.12.1.jar',
-    before => Service[‘minecraft’],
+    source => $url,
   }
 
-
-  package {‘java’:
+  package {'java':
     ensure => present,
   }
-  file {‘/opt/minecraft/eula.txt’:
+  file {"${install_dir}/eula.txt":
     ensure => file,
-    content => ‘eula=true’
+    content => 'eula=true'
   }
   file {‘/etc/systemd/system/minecraft.service’:
     ensure => file,
-    source => ‘puppet:///modules/minecraft/minecraft.service’,
+    content => epp(‘minecraft/minecraft.service.epp’, {
+      install_dir => $install_dir,
+    }),
   }
-  service { ‘minecraft’:
+  service { 'minecraft':
     ensure => running,
     enable => true,
-    require => [Package[‘java’],File[‘/opt/minecraft/eula.txt’],File[‘/etc/systemd/system/minecraft.service’]],
   }
 }
-
